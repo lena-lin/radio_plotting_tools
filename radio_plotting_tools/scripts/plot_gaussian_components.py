@@ -10,6 +10,8 @@ import astropy.units as u
 import glob
 from matplotlib.colors import LogNorm
 
+
+
 datapaths = ([])
 for data in glob.glob('../../../../radiokram/modeling/1638+118/*/final_mod.fits'):
     datapaths = np.append(datapaths, data)
@@ -21,8 +23,8 @@ def time_difference(dates, shortest_difference, scaling):
     time_diff = ( ([(np.datetime64(i) - np.datetime64(dates[0])) for i in dates]) / np.timedelta64(1, 'D') / shortest_difference ) * scaling
     return time_diff
 
-plt.figure(figsize=(12,8))
-fig, ax = plt.subplots()
+fig = plt.figure(figsize=(12,20))
+ax = fig.add_subplot(111, aspect='equal')
 num_epoch = 0
 y_ticks = ([])
 
@@ -45,7 +47,9 @@ for epoch in sorted(datapaths):
     y = np.linspace(-y_ref_pixel * y_inc, y_ref_pixel * y_inc, y_n_pixel)
 
     clean_map = difmap_data['PRIMARY'].data[0][0]
+    flux_min = clean_map.min()
     flux_max = clean_map.max()
+    loglevs_min = flux_min + (flux_max - flux_min) * 0.007
 
     delta_x = (difmap_data['AIPS CC'].data['DELTAX'] * u.degree).to(u.mas)
     delta_y = (difmap_data['AIPS CC'].data['DELTAY'] * u.degree).to(u.mas)
@@ -61,7 +65,7 @@ for epoch in sorted(datapaths):
     y = y - delta_y[0]
 
     # Calculate Timedifferences
-    time_diff = time_difference(dates, 60, 1.5)
+    time_diff = time_difference(dates, 60, 2)
 
     # y data has to be shifted for the different epochs
     delta_y = delta_y.value - time_diff[num_epoch]
@@ -71,12 +75,12 @@ for epoch in sorted(datapaths):
     plt.plot(delta_x, delta_y,  marker='.', markersize= 3, linestyle='none', label='Gaussian Components')
 
     ax.set_aspect(1)
-    ax.contour(x, y, clean_map, norm=LogNorm(), levels=np.logspace(np.log10(flux_max*1e-2), np.log10(flux_max), 10))
+    ax.contour(x, y, clean_map, norm=LogNorm(), levels=np.logspace(np.log10(loglevs_min), np.log10(flux_max), 10))
 
     # Plot Ellipses
     for i in range(len(delta_x)):
         ellipse = Ellipse((delta_x[i].value, delta_y[i]), height=major_ax[i].value, width=minor_ax[i].value, angle=phi_ellipse[i], edgecolor='black', facecolor='none')
-        ax.axis('equal')
+        #ax.axis('equal')
         ax.add_artist(ellipse)
 
     # Generate Y_Ticks
@@ -88,8 +92,7 @@ plt.xlabel('Relative RA / mas')
 #plt.legend()
 
 plt.xlim(5, -15)
-plt.ylim(-30, 5)
+plt.ylim(-40, 5)
 plt.tight_layout()
-plt.show()
-
-#plt.savefig('dynamic_plot.pdf', bbox_inches='tight', pad_inches=0.1)
+#plt.show()
+plt.savefig('dynamic_plot.pdf', bbox_inches='tight', pad_inches=0.1)
