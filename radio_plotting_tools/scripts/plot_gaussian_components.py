@@ -15,6 +15,8 @@ import glob
 from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
 
+from IPython import embed
+
 
 def get_obs_dates(list_files):
     dates = sorted([fits.open(file)['PRIMARY'].header['DATE-OBS'] for file in list_files])
@@ -31,22 +33,34 @@ def main(
 ):
     files = sorted(glob.glob('{}/*/{}.fits'.format(input_path, file_name)))
     dates = get_obs_dates(files)
+    time_diff = (([(np.datetime64(i) - np.datetime64(dates[0])) for i in dates]) / np.timedelta64(1, 'D') / 60) * 2
 
     fig = plt.figure(figsize=(12,20))
     ax = fig.add_subplot(111, aspect='equal')
 
+    y_ticks = []
     for num_epoch, f in enumerate(files):
         epoch = fits.open(f)
-        x,y = get_pixel_coordinates(epoch['PRIMARY'].header)
+        x, y = get_pixel_coordinates(epoch['PRIMARY'].header)
         clean_map = epoch['PRIMARY'].data[0][0]
         df_components = get_gaussian_components(epoch['AIPS CC'].data)
 
-        time_diff = (([(np.datetime64(i) - np.datetime64(dates[0])) for i in dates]) / np.timedelta64(1, 'D') / 60) * 2
         y_pos_components = df_components.y_positions.values - time_diff[num_epoch]
-        y = y - time_diff[num_epoch]
 
-        ax.contour(x, y, clean_map, norm=LogNorm())#, levels=np.logspace(np.log10(loglevs_min), np.log10(flux_max), 10))
+        y = y - time_diff[num_epoch] * u.mas
+
+        flux_min = clean_map.min()
+        flux_max = clean_map.max()
+        loglevs_min = flux_min + (flux_max - flux_min) * 0.017
+
+        y_ticks.append(y_pos_components[0])
+
+        ax.contour(-x, y, clean_map, norm=LogNorm(), levels=np.logspace(np.log10(loglevs_min), np.log10(flux_max), 10))
         ax.plot(df_components.x_positions, y_pos_components, color='black',  marker='.', markersize= 2, linestyle='none')
+
+    plt.yticks(y_ticks, dates)
+    plt.gca().invert_xaxis()
+    plt.xlabel('Relative RA / mas')
     plt.show()
 
 
