@@ -97,7 +97,7 @@ for epoch in sorted(datapaths):
 ########################################################################################################################################
 
 df_components = pd.DataFrame(columns=['date', 'x_positions', 'y_positions', 'major_axes', 'minor_axes',
-                                      'phi_ellipse', 'c_i'])
+                                      'phi_ellipse', 'c_i', 'y_no_time'])
 
 i = 0
 for epoch in sorted(datapaths):
@@ -113,7 +113,8 @@ for epoch in sorted(datapaths):
 
     # Shift Core to (0,0)
     x_positions = x_positions - x_positions[0] # in case first component fits core!!
-    y_positions = y_positions - y_positions[0] - time_diff[i]
+    y_positions = y_positions - y_positions[0]
+    y_positions_time = y_positions - y_positions[0] - time_diff[i]
 
     x_shifted, y_shifted  = rotate(x_positions,     # Shift positions for 90degree to avoid infinite slopes
                                    y_positions,
@@ -123,13 +124,14 @@ for epoch in sorted(datapaths):
 
     df_components_i = pd.DataFrame({'date': date,
                                   'x_positions': x_positions,
-                                  'y_positions': y_positions,
+                                  'y_positions': y_positions_time,
                                   'major_axes': major_axes,
                                   'minor_axes': minor_axes,
                                   'phi_ellipse': phi_ellipse,
                                   'c_i': '',
                                   'x_shifted': x_shifted,
-                                  'y_shifted': y_shifted
+                                  'y_shifted': y_shifted,
+                                  'y_no_time': y_positions
                                   })
     df_components = pd.concat([df_components, df_components_i], ignore_index=True)
     i+=1
