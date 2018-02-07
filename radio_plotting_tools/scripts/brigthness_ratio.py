@@ -25,11 +25,11 @@ dates = sorted([fits.open(file)['PRIMARY'].header['DATE-OBS'] for file in datapa
 fig = plt.figure(figsize=(12,20))
 ax = fig.add_subplot(111, aspect='equal')
 
-r = np.sqrt(df_components.loc[df_components['c_i'] == 4, 'x_positions']**2 + df_components.loc[df_components['c_i'] == 4, 'y_no_time']**2)
-print(r)
-
-plt.plot(r,
-         df_components.loc[df_components['c_i'] == 4, 'major_axes'],
+for i in range(len(df_components.loc[df_components['date'] == '2013-12-15', 'x_positions'])):
+    r = np.sqrt(df_components.loc[df_components['c_i'] == i, 'x_positions']**2 + df_components.loc[df_components['c_i'] == i, 'y_no_time']**2)
+    print(r)
+    plt.plot(r,
+         df_components.loc[df_components['c_i'] == i, 'major_axes'],
          linestyle='none',
          marker='.',
          markersize=8
@@ -38,7 +38,7 @@ plt.plot(r,
 
 plt.ylabel('Majoraxis / mas')
 plt.xlabel('Distance / minor_axes')
-#plt.ylim(0,18)
-
+plt.yscale('log')
+plt.ylim(0.0000001,10)
 
 plt.savefig('brightness_ratio.pdf', bbox_inches='tight', pad_inches=0.1)
