@@ -19,6 +19,7 @@ import astropy.units as u
 import glob
 from matplotlib.colors import LogNorm
 from scipy.optimize import curve_fit
+import pandas as pd
 
 # Array with datapaths for all epochs
 datapaths = ([])
@@ -34,12 +35,6 @@ def time_difference(dates, shortest_difference, scaling):
     return time_diff
 
 # Define empty arrays
-y_ticks = ([])
-delta_x = ([])
-delta_y = ([])
-major_ax = ([])
-minor_ax = ([])
-phi_ellipse = ([])
 x_n_pixel = ([])
 x_ref_pixel = ([])
 x_inc = ([])
@@ -52,8 +47,6 @@ clean_map = ([])
 flux_min = ([])
 flux_max = ([])
 loglevs_min = ([])
-c_x = ([])
-c_y = ([])
 
 # x_values for linear regression
 x_values = np.linspace(-40, 100, 10)
@@ -80,6 +73,10 @@ def find_nearest(array,value):
     idx = (np.abs(array-value)).argmin()
     return array[idx]
 
+# Shift core to (0,0) and calculate timedifference
+time_diff = np.asarray(time_difference(dates, 60, 2))
+
+
 # Load data for different epochs
 
 for epoch in sorted(datapaths):
@@ -95,30 +92,62 @@ for epoch in sorted(datapaths):
     y_ref_pixel.append(difmap_data['PRIMARY'].header['CRPIX2'])
     y_inc.append((difmap_data['PRIMARY'].header['CDELT2'] * u.degree).to(u.mas))
     y_ref_value.append((difmap_data['PRIMARY'].header['CRVAL2'] * u.degree).to(u.mas))
-
-
     clean_map.append(difmap_data['PRIMARY'].data[0][0])
 
-    delta_x.append(((difmap_data['AIPS CC'].data['DELTAX'] * u.degree).to(u.mas)).value)
-    delta_y.append(((difmap_data['AIPS CC'].data['DELTAY'] * u.degree).to(u.mas)).value)
-    major_ax.append(((difmap_data['AIPS CC'].data['MAJOR AX'] * u.degree).to(u.mas)).value)
-    minor_ax.append(((difmap_data['AIPS CC'].data['MINOR AX'] * u.degree).to(u.mas)).value)
-    phi_ellipse.append((difmap_data['AIPS CC'].data['POSANGLE']))
+########################################################################################################################################
 
-# Shift core to (0,0) and calculate timedifference
-time_diff = np.asarray(time_difference(dates, 60, 2))
+df_components = pd.DataFrame(columns=['date', 'x_positions', 'y_positions', 'major_axes', 'minor_axes',
+                                      'phi_ellipse', 'c_i'])
 
-for i in range(len(dates)):
-    delta_x[i] = delta_x[i] - delta_x[i][0]
-    delta_y[i] = delta_y[i] - delta_y[i][0] - time_diff[i]
+i = 0
+for epoch in sorted(datapaths):
+    input_file = epoch
+    date = fits.open(epoch)['PRIMARY'].header['DATE-OBS']
+    difmap_data = fits.open(input_file)
+
+    x_positions = ((difmap_data['AIPS CC'].data['DELTAX'] * u.degree).to(u.mas)).value
+    y_positions = ((difmap_data['AIPS CC'].data['DELTAY'] * u.degree).to(u.mas)).value
+    major_axes = ((difmap_data['AIPS CC'].data['MAJOR AX'] * u.degree).to(u.mas)).value
+    minor_axes = ((difmap_data['AIPS CC'].data['MINOR AX'] * u.degree).to(u.mas)).value
+    phi_ellipse = (difmap_data['AIPS CC'].data['POSANGLE'])
+
+    # Shift Core to (0,0)
+    x_positions = x_positions - x_positions[0] # in case first component fits core!!
+    y_positions = y_positions - y_positions[0] - time_diff[i]
+
+    x_shifted, y_shifted  = rotate(x_positions,     # Shift positions for 90degree to avoid infinite slopes
+                                   y_positions,
+                                   -np.deg2rad(90),
+                                   len(x_positions))
+
+
+    df_components_i = pd.DataFrame({'date': date,
+                                  'x_positions': x_positions,
+                                  'y_positions': y_positions,
+                                  'major_axes': major_axes,
+                                  'minor_axes': minor_axes,
+                                  'phi_ellipse': phi_ellipse,
+                                  'c_i': '',
+                                  'x_shifted': x_shifted,
+                                  'y_shifted': y_shifted
+                                  })
+    df_components = pd.concat([df_components, df_components_i], ignore_index=True)
+    i+=1
+
+# Choose reference epoch
+ref_pos = df_components['x_positions'][df_components['date'] == '2013-12-15']
+
+# Find components
+c_i = np.arange(len(ref_pos))
+for i in range(len(ref_pos)):
+    index = df_components[(np.abs(df_components['x_positions']) - np.abs(ref_pos[i]) > -0.1 ) & (np.abs(df_components['x_positions']) - np.abs(ref_pos[i]) < 0.25)].index
+    df_components.loc[index, 'c_i'] = c_i[i]
 
 # Make contour plot and plot all components
 fig = plt.figure(figsize=(12,20))
 ax = fig.add_subplot(111, aspect='equal')
 
 for i in range(len(dates)):
-    c_x = np.append(c_x, delta_x[i])
-    c_y = np.append(c_y, delta_y[i])
 
     x = np.linspace(x_ref_pixel[i] * x_inc[i], -x_ref_pixel[i] * x_inc[i], x_n_pixel[i])
     y = np.linspace(-y_ref_pixel[i] * y_inc[i], y_ref_pixel[i] * y_inc[i], y_n_pixel[i]).value - time_diff[i]
@@ -128,55 +157,55 @@ for i in range(len(dates)):
 
 
 
-    plt.plot(delta_x[i], delta_y[i], marker='.', color='black', linestyle='none', markersize=4)
+    plt.plot(df_components.loc[df_components['date'] == dates[i], 'x_positions'], df_components.loc[df_components['date'] == dates[i], 'y_positions'],
+             marker='.', color='black', linestyle='none', markersize=4, label='')
 
     ax.set_aspect(1)
     ax.contour(-x, y, clean_map[i], norm=LogNorm(), levels=np.logspace(np.log10(loglevs_min[i]), np.log10(flux_max[i]), 10))
 
     # Plot ellipses
-    for j in range(len(delta_x)):
-        ellipse = Ellipse((delta_x[i][j], delta_y[i][j]), height=major_ax[i][j], width=minor_ax[i][j], angle=phi_ellipse[i][j], edgecolor='black', facecolor='none', linewidth=1.5)
+    for j in df_components['x_positions'][df_components['date'] == dates[i]].index:
+        ellipse = Ellipse((df_components['x_positions'][df_components['date'] == dates[i]][j],
+                               df_components['y_positions'][df_components['date'] == dates[i]][j]),
+                               height = df_components['minor_axes'][df_components['date'] == dates[i]][j],
+                               width = df_components['major_axes'][df_components['date'] == dates[i]][j],
+                               angle = df_components['phi_ellipse'][df_components['date'] == dates[i]][j],
+                               edgecolor='black',
+                               facecolor='none',
+                               linewidth=1)
         ax.add_artist(ellipse)
 
-    x_c = ([])
-    y_c = ([])
-    params = ([])
-
-# Search for epoch with most components / search for suitable components in other epochs / make arrays with positions for component c_i
-
-number_c = ([])
-([number_c.append(len(delta_x[i])) for i in range(len(delta_x))])
-#ref_pos = delta_x[np.array(number_c).argmax(axis=0)]
-ref_pos = delta_x[0]
-
-for i in range(len(ref_pos)):
-    if i == 0:
-        x_c.append(c_x[np.abs(c_x-ref_pos[i]) == 0])
-        z = ([])
-        for j in range(len(x_c[i])):
-            z.append(c_y[c_x == x_c[i][j]][0] - time_diff[j])
-        y_c.append(z)
-    else:
-        x_c.append(c_x[(np.abs(c_x) - np.abs(ref_pos[i]) > -0.1) & (np.abs(c_x) - np.abs(ref_pos[i]) < 0.4)])
-        z = ([])
-        for j in range(len(x_c[i])):
-            z.append(c_y[c_x == x_c[i][j]][0])
-        y_c.append(z)
 
 # Plot identified Cs and make linear fit with shifted positions / colored ellipses still missing
 
 for c in range(len(ref_pos)):
-    if len(x_c[c]) == 1:
-        plt.plot(x_c[c], y_c[c], marker='.', color=colors[c], linestyle='none', markersize=8, label='C_'+str(c))
+    if len(df_components[df_components['c_i'] == c]) == 1:
+        plt.plot(df_components['x_positions'][df_components['c_i'] == c], df_components['y_positions'][df_components['c_i'] == c], marker='.', color=colors[c], linestyle='none', markersize=8, label='C_'+str(c))
     else:
-        x_c_neu, y_c_neu  = rotate(x_c[c], y_c[c], -np.deg2rad(90), len(x_c[c]))    # Shift positions for 90degree to avoid infinite slopes
+        x_c_neu, y_c_neu  = rotate(df_components['x_positions'][df_components['c_i'] == c],     # Shift positions for 90degree to avoid infinite slopes
+                            df_components['y_positions'][df_components['c_i'] == c],
+                            -np.deg2rad(90),
+                            len(df_components['x_positions'][df_components['c_i'] == c]))
 
         params, covariance = curve_fit(linear_fit, x_c_neu, y_c_neu)
         errors = np.sqrt(np.diag(covariance))
-        plt.plot(x_c[c], y_c[c], marker='.', color=colors[c], linestyle='none', markersize=8, label='C_'+str(c))
-        #for j in range(len(x_c[c])):
-        #    ellipse = Ellipse((x_c[c][j], y_c[c][j]), height=1, width=1, angle=1, edgecolor=colors[c], facecolor='none', linewidth=1.5)
-        #    ax.add_artist(ellipse)
+        plt.plot(df_components['x_positions'][df_components['c_i'] == c],
+                 df_components['y_positions'][df_components['c_i'] == c],
+                 marker='.',
+                 color=colors[c],
+                 linestyle='none',
+                 markersize=8,
+                 label='C_'+str(c))
+        for j in df_components['x_positions'][df_components['c_i'] == c].index:
+            ellipse = Ellipse((df_components['x_positions'][df_components['c_i'] == c][j],
+                               df_components['y_positions'][df_components['c_i'] == c][j]),
+                               height = df_components['minor_axes'][df_components['c_i'] == c][j],
+                               width = df_components['major_axes'][df_components['c_i'] == c][j],
+                               angle = df_components['phi_ellipse'][df_components['c_i'] == c][j],
+                               edgecolor=colors[c],
+                               facecolor='none',
+                               linewidth=1.5)
+            ax.add_artist(ellipse)
         plt.plot(-linear_fit(x_values, *params), x_values, color=colors[c], linewidth=1)
 
 # Change axes and save plot
@@ -189,3 +218,5 @@ plt.xlim(5, -15)
 plt.ylim(-35, 3)
 plt.tight_layout()
 plt.savefig('dynamic_plot.pdf', bbox_inches='tight', pad_inches=0.1)
+
+df_components.to_csv('components.csv')
