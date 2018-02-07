@@ -25,8 +25,8 @@ dates = sorted([fits.open(file)['PRIMARY'].header['DATE-OBS'] for file in datapa
 fig = plt.figure(figsize=(12,20))
 ax = fig.add_subplot(111, aspect='equal')
 
-r = np.sqrt(df_components.loc[df_components['c_i'] == 4, 'x_positions']**2 + df_components.loc[df_components['c_i'] == 4, 'y_positions']**2)
-print(df_components.loc[df_components['c_i'] == 4, 'y_shifted'])
+r = np.sqrt(df_components.loc[df_components['c_i'] == 4, 'x_positions']**2 + df_components.loc[df_components['c_i'] == 4, 'y_no_time']**2)
+print(r)
 
 plt.plot(r,
          df_components.loc[df_components['c_i'] == 4, 'major_axes'],
