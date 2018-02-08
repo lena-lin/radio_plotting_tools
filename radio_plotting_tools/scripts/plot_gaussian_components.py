@@ -97,7 +97,7 @@ for epoch in sorted(datapaths):
 ########################################################################################################################################
 
 df_components = pd.DataFrame(columns=['date', 'x_positions', 'y_positions', 'major_axes', 'minor_axes',
-                                      'phi_ellipse', 'c_i', 'y_no_time'])
+                                      'phi_ellipse', 'c_i', 'y_no_time', 'radial_dist'])
 
 i = 0
 for epoch in sorted(datapaths):
@@ -112,26 +112,20 @@ for epoch in sorted(datapaths):
     phi_ellipse = (difmap_data['AIPS CC'].data['POSANGLE'])
 
     # Shift Core to (0,0)
-    x_positions = x_positions - x_positions[0] # in case first component fits core!!
-    y_positions = y_positions - y_positions[0]
+    x_positions_corected = x_positions - x_positions[0] # in case first component fits core!!
+    y_positions_corected = y_positions - y_positions[0]
+    radial_dist = np.sqrt(x_positions**2 + y_positions**2)
     y_positions_time = y_positions - y_positions[0] - time_diff[i]
 
-    x_shifted, y_shifted  = rotate(x_positions,     # Shift positions for 90degree to avoid infinite slopes
-                                   y_positions,
-                                   -np.deg2rad(90),
-                                   len(x_positions))
-
-
     df_components_i = pd.DataFrame({'date': date,
-                                  'x_positions': x_positions,
+                                  'x_positions': x_positions_corected,
                                   'y_positions': y_positions_time,
                                   'major_axes': major_axes,
                                   'minor_axes': minor_axes,
                                   'phi_ellipse': phi_ellipse,
                                   'c_i': '',
-                                  'x_shifted': x_shifted,
-                                  'y_shifted': y_shifted,
-                                  'y_no_time': y_positions
+                                  'y_no_time': y_positions_corected,
+                                  'radial_dist': radial_dist
                                   })
     df_components = pd.concat([df_components, df_components_i], ignore_index=True)
     i+=1
