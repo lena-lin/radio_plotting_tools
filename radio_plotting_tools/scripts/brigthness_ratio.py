@@ -51,15 +51,14 @@ fig = plt.figure(figsize=(12, 10))
 ax = fig.add_subplot(111)
 
 for i in range(len(df_components.loc[df_components['date'] == '2013-12-15', 'x_positions'])):
-    r = np.sqrt(df_components.loc[df_components['c_i'] == i, 'x_positions']**2 + df_components.loc[df_components['c_i'] == i, 'y_no_time']**2)
-    plt.plot(r,
-         df_components.loc[df_components['c_i'] == i, 'major_axes'],
-         linestyle='none',
-         marker='.',
-         markersize=8,
-         label='C_'+str(i),
-         color=colors[i]
-         )
+    plt.plot(df_components.loc[df_components['c_i'] == i, 'radial_dist'],
+             df_components.loc[df_components['c_i'] == i, 'major_axes'],
+             linestyle='none',
+             marker='.',
+             markersize=8,
+             label='C_'+str(i),
+             color=colors[i]
+             )
 
 plt.ylabel('Majoraxis / mas')
 plt.xlabel('Distance / mas')
@@ -82,7 +81,7 @@ r = np.sqrt(df_components.loc[(df_components['c_i'] >= 0) & (df_components['majo
             df_components.loc[(df_components['c_i'] >= 0) & (df_components['major_axes'] > 1e-3), 'y_no_time']**2)
 
 params, covariance = curve_fit(linear_fit,
-                     r,
+                     df_components.loc[(df_components['c_i'] >= 0) & (df_components['major_axes'] > 1e-3), 'radial_dist'],
                      df_components.loc[(df_components['c_i'] >= 0) & (df_components['major_axes'] > 1e-3) , 'major_axes']
                      )
 
@@ -90,17 +89,14 @@ errors = np.sqrt(np.diag(covariance))
 
 x_values = np.linspace(-5, 15, 1000)
 for i in range(len(df_components.loc[df_components['date'] == '2013-12-15', 'x_positions'])):
-    r = np.sqrt(df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'x_positions']**2 +
-                df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'y_no_time']**2)
-
-    plt.plot(r,
-         df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'major_axes'],
-         linestyle='none',
-         marker='.',
-         markersize=8,
-         label='C_'+str(i),
-         color=colors[i]
-         )
+    plt.plot(df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'radial_dist'],
+             df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'major_axes'],
+             linestyle='none',
+             marker='.',
+             markersize=8,
+             label='C_'+str(i),
+             color=colors[i]
+             )
 
 plt.plot(x_values, linear_fit(x_values, *params), linewidth=1.5, color='black', linestyle='--')
 
@@ -123,17 +119,14 @@ fig = plt.figure(figsize=(12, 10))
 ax = fig.add_subplot(111)
 
 for i in range(len(df_components.loc[df_components['date'] == '2013-12-15', 'x_positions'])):
-    r = np.sqrt(df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'x_positions']**2 +
-                df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'y_no_time']**2)
-
-    plt.plot(r,
-         df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'major_axes'],
-         linestyle='none',
-         marker='.',
-         markersize=8,
-         label='C_'+str(i),
-         color=colors[i]
-         )
+    plt.plot(df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'radial_dist'],
+             df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] > 1e-3), 'major_axes'],
+             linestyle='none',
+             marker='.',
+             markersize=8,
+             label='C_'+str(i),
+             color=colors[i]
+             )
 
     r_2 = np.sqrt(df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] < 1e-3), 'x_positions']**2 +
                 df_components.loc[(df_components['c_i'] == i) & (df_components['major_axes'] < 1e-3), 'y_no_time']**2)
