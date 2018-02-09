@@ -17,7 +17,6 @@ from astropy.io import fits
 from scipy.optimize import curve_fit
 
 '''
-Change structure after saving r in df
 
 Infos the programm needs when we write it as a function:
 
