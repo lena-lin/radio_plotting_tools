@@ -37,10 +37,12 @@ df_components = pd.concat([df_components, delta_days], axis=1)
 def linear_fit(f, m, b):
     return m * f + b
 
-x_values = np.linspace(16000, 17000, 10)
+x_values = np.linspace(-10, 1000, 10)
 
 # Colors for different c_i
 colors = (['red', 'blue', 'magenta', 'orange', 'green', 'brown', 'cyan', 'darkorange', 'grey', 'olive'])
+
+df_velocities = pd.DataFrame(columns=['component', 'velocity', 'velocity_err'])
 
 #################################################################################################################################################
 
@@ -49,33 +51,46 @@ fig = plt.figure(figsize=(12, 10))
 ax = fig.add_subplot(111)
 
 for i in range(len(df_components.loc[df_components['date'] == '2013-12-15', 'x_positions'])):
-    plt.plot(np.array(df_components.loc[df_components['c_i'] == i, 'date'], dtype='datetime64[D]'),
+    plt.errorbar(df_components.loc[df_components['c_i'] == i, 'delta_days'],
              df_components.loc[df_components['c_i'] == i, 'radial_dist'],
+             yerr = (df_components.loc[df_components['c_i'] == i, 'major_axes'])/2,
              linestyle='none',
              marker='.',
              markersize=8,
              label='C_'+str(i),
              color=colors[i]
              )
-    print(df_components.loc[df_components['c_i'] == i, 'delta_days'])
-    print(df_components.loc[df_components['c_i'] == i, 'radial_dist'])
+
     params, covariance = curve_fit(linear_fit,
                      df_components.loc[df_components['c_i'] == i, 'delta_days'],
-                     df_components.loc[df_components['c_i'] == i, 'radial_dist']
+                     df_components.loc[df_components['c_i'] == i, 'radial_dist'],
+                     sigma = (df_components.loc[df_components['c_i'] == i, 'major_axes'])/2
                      )
     errors = np.sqrt(np.diag(covariance))
-    print(params)
-    print(errors)
 
-    plt.plot(np.array(x_values, dtype='datetime64[D]'), linear_fit(x_values, *params), linewidth=0.5, color=colors[i], linestyle='--')
-    plt.show()
+    component = str(i)
+    velocity = params[0] * 365
+    velocity_err = errors[0] * 365
 
+    df_velocities_i = pd.DataFrame({'component': component,
+                              'velocity': velocity,
+                              'velocity_err': velocity_err
+                              }, index=[i])
+    df_velocities = pd.concat([df_velocities, df_velocities_i], ignore_index=True)
+
+    plt.plot(x_values, linear_fit(x_values, *params), linewidth=0.5, color=colors[i], linestyle='--')
 
 plt.ylabel('Distance / mas')
 plt.xlabel('Date')
-plt.xlim(np.array(x_values, dtype='datetime64[D]')[0],np.array(x_values, dtype='datetime64[D]')[-1])
+plt.xticks(np.unique(df_components['delta_days']), np.unique(df_components['date']), rotation=45)
+plt.xlim(-10, 1000)
 plt.ylim(-1,13)
 plt.ylim()
-plt.legend(loc=9, ncol=5)
+plt.legend(loc=9, ncol=4)
 plt.tight_layout()
-plt.savefig('jet_motion.pdf', bbox_inches='tight', pad_inches=0.1)
+plt.savefig('jet_velocity.pdf', bbox_inches='tight', pad_inches=0.1)
+
+
+print(df_velocities)
+
+df_velocities.to_csv('component_velocities.csv')
