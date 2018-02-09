@@ -26,6 +26,15 @@ converter.register()
 df_components = pd.read_csv('components.csv')
 dates = np.unique(df_components['date'])
 
+# Add delta_days to df
+
+date = (pd.to_datetime(df_components['date'], format='%Y-%m-%d'))
+delta_days = ((date - date.min()) / np.timedelta64(1,'D'))
+delta_days = pd.DataFrame({'delta_days': delta_days})
+df_components = pd.concat([df_components, delta_days], axis=1)
+
+
+
 # Define linear function
 def linear_fit(f, m, b):
     return m * f + b
@@ -60,19 +69,17 @@ for i in range(len(df_components.loc[df_components['date'] == '2013-12-15', 'x_p
     # plt.plot(mdates.num2date(x_values), linear_fit(x_values, *params), linewidth=1.5, color='black', linestyle='--')
 
 
-x = (pd.to_datetime(df_components['date'], format='%Y-%m-%d'))
-x1 = ((x - x.min()) / np.timedelta64(1,'D'))
 
 # df['date_delta'] = (df['date'] - df['date'].min())  / np.timedelta64(1,'D')
-y = df_components['radial_dist']
-
-params, covariance = curve_fit(linear_fit,
-                     x1,
-                     y
-                     )
-errors = np.sqrt(np.diag(covariance))
-
-print(params)
+# y = df_components['radial_dist']
+#
+# params, covariance = curve_fit(linear_fit,
+#                      x1,
+#                      y
+#                      )
+# errors = np.sqrt(np.diag(covariance))
+#
+# print(params)
 
 plt.ylabel('Distance / mas')
 plt.xlabel('Date')
