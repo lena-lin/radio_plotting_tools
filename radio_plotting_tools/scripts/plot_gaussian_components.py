@@ -97,7 +97,7 @@ for epoch in sorted(datapaths):
 ########################################################################################################################################
 
 df_components = pd.DataFrame(columns=['date', 'x_positions', 'y_positions', 'major_axes', 'minor_axes',
-                                      'phi_ellipse', 'c_i', 'y_no_time', 'radial_dist'])
+                                      'phi_ellipse', 'c_i', 'y_no_time', 'radial_dist', 'flux'])
 
 i = 0
 for epoch in sorted(datapaths):
@@ -110,6 +110,7 @@ for epoch in sorted(datapaths):
     major_axes = ((difmap_data['AIPS CC'].data['MAJOR AX'] * u.degree).to(u.mas)).value
     minor_axes = ((difmap_data['AIPS CC'].data['MINOR AX'] * u.degree).to(u.mas)).value
     phi_ellipse = (difmap_data['AIPS CC'].data['POSANGLE'])
+    flux = (difmap_data['AIPS CC'].data['FLUX'])
 
     # Shift Core to (0,0)
     x_positions_corrected = x_positions - x_positions[0] # in case first component fits core!!
@@ -125,7 +126,8 @@ for epoch in sorted(datapaths):
                                   'phi_ellipse': phi_ellipse,
                                   'c_i': '',
                                   'y_no_time': y_positions_corrected,
-                                  'radial_dist': radial_dist
+                                  'radial_dist': radial_dist,
+                                  'flux': flux
                                   })
     df_components = pd.concat([df_components, df_components_i], ignore_index=True)
     i+=1
