@@ -14,15 +14,12 @@ import pandas as pd
 from scipy.optimize import curve_fit
 import matplotlib.dates as mdates
 from datetime import datetime
-
-from pandas.tseries import converter
-converter.register()
-
+import uncertainties.unumpy as unp
+import scipy.constants as const
 
 #################################################################################################################################################
 
 # Load data / array with all observation dates
-
 df_components = pd.read_csv('components.csv')
 dates = np.unique(df_components['date'])
 
@@ -90,7 +87,20 @@ plt.legend(loc=9, ncol=4)
 plt.tight_layout()
 plt.savefig('jet_velocity.pdf', bbox_inches='tight', pad_inches=0.1)
 
+#################################################################################################################################################
+
+# Determine apparent velocities and save to df
+phi_agn = np.deg2rad(10)
+v_app = unp.uarray(df_velocities['velocity'], df_velocities['velocity_err'])
+c = const.c
+
+beta = v_app / c
+beta_app = ( beta * np.sin(phi_agn) ) / ( 1 - beta * np.cos(phi_agn) )
+
+df_beta = pd.DataFrame({'beta_app': beta_app,
+                        })
+
+df_velocities = pd.concat([df_velocities, df_beta], axis=1)
 
 print(df_velocities)
-
 df_velocities.to_csv('component_velocities.csv')
