@@ -12,7 +12,7 @@ def brightness_temp(
     redshift,
     frequency=15e9
 ):
-    df_components = pd.read_csv('components.csv')
+    df_components = pd.read_csv(input_file)
 
     lamb = const.c / frequency
     kB = unp.uarray(const.physical_constants['Boltzmann constant'][0], const.physical_constants['Boltzmann constant'][2])
