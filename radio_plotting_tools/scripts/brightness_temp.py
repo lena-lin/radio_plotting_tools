@@ -31,15 +31,4 @@ def brightness_temp(
 
 
 if __name__ == '__main__':
-    main()
-
-
-
-'''
-cross check: core 2007-11-10 table 3.7
-
-lamb = const.c / 8.4e9
-kB = unp.uarray(const.physical_constants['Boltzmann constant'][0], const.physical_constants['Boltzmann constant'][2])
-print((2 * np.log(2) / (np.pi * kB)) * ( (1.18e-26 * lamb**2 * (1 + 0.056)) / ((0.126*u.mas).to(u.rad) * (0.066*u.mas).to(u.rad) )) )
-
-'''
+    brightness_temp()
