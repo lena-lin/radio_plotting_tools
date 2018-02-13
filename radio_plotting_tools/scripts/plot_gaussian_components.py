@@ -97,7 +97,7 @@ for epoch in sorted(datapaths):
 ########################################################################################################################################
 
 df_components = pd.DataFrame(columns=['date', 'x_positions', 'y_positions', 'major_axes', 'minor_axes',
-                                      'phi_ellipse', 'c_i', 'y_no_time', 'radial_dist', 'flux'])
+                                      'phi_ellipse', 'c_i', 'y_no_time', 'radial_dist', 'flux', 'bright_temp'])
 
 i = 0
 for epoch in sorted(datapaths):
