@@ -9,14 +9,15 @@ import astropy.units as u
 
 def brightness_temp(
     input_file,
-    loglevs,
+    redshift,
+    frequency=15e9
 ):
     df_components = pd.read_csv('components.csv')
 
-    lamb = const.c / 15e9
+    lamb = const.c / frequency
     kB = unp.uarray(const.physical_constants['Boltzmann constant'][0], const.physical_constants['Boltzmann constant'][2])
     S = (df_components.loc[df_components['c_i'] == 0, 'flux'])
-    z = 0.078
+    z = redshift
     a_maj = u.mas.to(u.rad, df_components.loc[df_components['c_i'] == 0, 'major_axes'])
     a_min = u.mas.to(u.rad, df_components.loc[df_components['c_i'] == 0, 'minor_axes'])
 
