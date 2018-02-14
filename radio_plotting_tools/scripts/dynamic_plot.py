@@ -18,6 +18,8 @@ import pandas as pd
 
 import glob
 import plot_clean_map
+from astropy.io import fits
+import astropy.units as u
 
 
 ################################################################################################################################################
@@ -71,14 +73,15 @@ def make_dynamic_plot(
     # Choose reference epoch
     ref_pos = df_components['x_positions'][df_components['date'] == ref_epoch]
 
-
     # Find components
     c_i = np.arange(len(ref_pos))
-    for i in range(len(ref_pos)):
+    j = 0
+    for i in ref_pos.index:
         index = df_components[(np.abs(df_components['x_positions']) - np.abs(ref_pos[i]) > -0.1 )
                                &
                                (np.abs(df_components['x_positions']) - np.abs(ref_pos[i]) < 0.25)].index
-        df_components.loc[index, 'c_i'] = c_i[i]
+        df_components.loc[index, 'c_i'] = c_i[j]
+        j+=1
 
     # Subtract time differences from y_positions
     for i in range(len(dates)):
@@ -103,6 +106,23 @@ def make_dynamic_plot(
 
         # Plot clean map
         plot_clean_map.main(str(datapaths[i]) ,0.007, time_diff[i])
+
+        # Plot clean beam
+        difmap_data = fits.open(datapaths[i])
+        cbeam_maj = ((difmap_data['PRIMARY'].header['BMAJ'] * u.degree).to(u.mas)).value
+        cbeam_min = ((difmap_data['PRIMARY'].header['BMIN'] * u.degree).to(u.mas)).value
+        cbeam_angle = -(difmap_data['PRIMARY'].header['BPA'] * u.degree).value - 90
+
+        ellipse = Ellipse((3,
+                           np.amin(df_components.loc[df_components['date'] == dates[i], 'y_positions'])),
+                           height = cbeam_min,
+                           width = cbeam_maj,
+                           angle = cbeam_angle,
+                           edgecolor='black',
+                           facecolor='none',
+                           linestyle='--',
+                           linewidth=0.5)
+        ax.add_artist(ellipse)
 
         # Plot ellipses
         for j in df_components['x_positions'][df_components['date'] == dates[i]].index:
