@@ -1,6 +1,7 @@
 import astropy.units as u
 import numpy as np
 
+
 def get_pixel_coordinates(header, relative=True):
     x_n_pixel = header['NAXIS1']
     x_ref_pixel = header['CRPIX1']
@@ -19,3 +20,35 @@ def get_pixel_coordinates(header, relative=True):
         y -= y_ref_value
 
     return x, y
+
+
+def relative_position(ra, dec, ra_0, dec_0):
+    ra_rel = (ra - ra_0)*u.deg.to(u.mas)
+    dec_rel = (dec - dec_0)*u.deg.to(u.mas)
+    return ra_rel, dec_rel
+
+
+def get_mask_from_mas(header, ra_min, ra_max, dec_min, dec_max):
+    x_ref_pixel = header['CRPIX1']
+    x_inc = (header['CDELT1'] * u.degree).to(u.mas)
+    y_ref_pixel = header['CRPIX2']
+    y_inc = (header['CDELT2'] * u.degree).to(u.mas)
+
+    mask_row_min = int(y_ref_pixel - abs(dec_min/y_inc.value))
+    mask_row_max = int(y_ref_pixel + abs(dec_max/y_inc.value))
+    mask_col_min = int(x_ref_pixel - abs(ra_min/x_inc.value))
+    mask_col_max = int(x_ref_pixel + abs(ra_max/x_inc.value))
+
+    return mask_row_min, mask_row_max, mask_col_min, mask_col_max
+
+
+def get_point_coordinates(header, row, col):
+    x_ref_pixel = header['CRPIX1']
+    x_inc = (header['CDELT1'] * u.degree).to(u.mas)
+    y_ref_pixel = header['CRPIX2']
+    y_inc = (header['CDELT2'] * u.degree).to(u.mas)
+
+    ra = (x_ref_pixel - col)*x_inc.value
+    dec = (y_ref_pixel - row)*y_inc.value
+
+    return ra, dec
