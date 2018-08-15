@@ -1,7 +1,7 @@
 import astropy.units as u
 import numpy as np
 
-def get_pixel_coordinates(header, relative=True):
+def get_pixel_coordinates(header, shift_x_ref=0, shift_y_ref=0, relative=True):
     x_n_pixel = header['NAXIS1']
     x_ref_pixel = header['CRPIX1']
     x_inc = (header['CDELT1'] * u.degree).to(u.mas)
