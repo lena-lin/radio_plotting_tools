@@ -15,6 +15,7 @@ setup(
     entry_points={
         'console_scripts': [
             'radio_plotting_clean_map = radio_plotting_tools.scripts.plot_clean_map:main',
+            'make_gif = radio_plotting_tools.scripts.make_gif:main',
         ]
     }
 )
