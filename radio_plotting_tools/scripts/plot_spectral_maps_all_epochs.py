@@ -61,7 +61,7 @@ for f15, f43, td in tqdm(epoch_partners):
     ax2.set_title('Clean Map {: .2f} GHz'.format((freq2 * u.Hz).to(u.GHz)))
 
     ax3 = plt.subplot(133)
-    cax = ax3.pcolorfast(-x2, y2, spec_ind, cmap='Spectral')
+    cax = ax3.pcolorfast(-x2, y2, spec_ind, cmap='Spectral', vmin=-3, vmax=3)
     ax3.invert_xaxis()
     ax3.set_aspect(1)
     ax3.set_xlim(5, -3.8)
