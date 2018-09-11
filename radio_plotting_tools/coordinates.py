@@ -17,8 +17,6 @@ def get_pixel_coordinates(header, x_ref_pixel=None, y_ref_pixel=None, relative=T
     if y_ref_pixel == None:
         y_ref_pixel = header['CRPIX2']
 
-    print(x_ref_pixel)
-
     x = np.linspace(x_ref_pixel * -x_inc, (x_n_pixel - x_ref_pixel) * x_inc, x_n_pixel)
     y = np.linspace(y_ref_pixel * -y_inc, (y_n_pixel - y_ref_pixel) * y_inc, y_n_pixel)
 
