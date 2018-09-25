@@ -28,8 +28,13 @@ for file15 in files_15:
 
 
 for f15, f43, td in tqdm(epoch_partners):
-    x1, y1, ip_15 = sm.interpolated_map(f15, offset=40)
-    x2, y2, ip_43 = sm.interpolated_map(f43, offset=200)
+    header1 = fits.open(f15)[0].header
+    data1 = fits.open(f15)[0].data[0][0]
+    header2 = fits.open(f43)[0].header
+    data2 = fits.open(f43)[0].data[0][0]
+
+    x1, y1, ip_15 = sm.interpolated_map(header1, data1, offset=40)
+    x2, y2, ip_43 = sm.interpolated_map(header2, data2, offset=200, convolution_beam_header=header1)
 
     header1 = fits.open(f15)[0].header
     header2 = fits.open(f43)[0].header
@@ -40,7 +45,7 @@ for f15, f43, td in tqdm(epoch_partners):
     freq1 = header1['CRVAL3']
     freq2 = header2['CRVAL3']
 
-    spec_ind = sm.spectral_indices(f15, f43, offset1=40, offset2=200)
+    spec_ind = sm.spectral_indices(header1, data1, header2, data2, offset1=40, offset2=200)
 
     fig = plt.figure(figsize=(18, 6))
 
@@ -73,5 +78,5 @@ for f15, f43, td in tqdm(epoch_partners):
     ax3.set_title('Spectral Map')
 
     plt.colorbar(cax, fraction=0.052, pad=0.05)
-    plt.savefig('/home/lena/Dokumente/Radio/NGC1275/VLBA-BU/Plots/Spectral_maps/{}_spectral_map_15_43.png'.format(header1['DATE-OBS']))
+    plt.savefig('/home/lena/Dokumente/Radio/NGC1275/VLBA-BU/Plots/Spectral_maps/{}_spectral_map_15_43_conv.png'.format(header1['DATE-OBS']))
     plt.close()
