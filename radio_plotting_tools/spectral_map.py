@@ -62,7 +62,7 @@ def find_peaks_max_y(header, clean_map, max_y_offset, sigma=150):
             max_y = peak[0]
             y_ref, x_ref = peak
 
-    return x_ref, y_ref
+    return int(x_ref), int(y_ref)
 
 
 def beamsize(header):
