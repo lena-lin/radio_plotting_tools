@@ -47,13 +47,16 @@ def get_mask_from_mas(header, ra_min, ra_max, dec_min, dec_max):
     return mask_row_min, mask_row_max, mask_col_min, mask_col_max
 
 
-def get_point_coordinates(header, row, col):
-    x_ref_pixel = header['CRPIX1']
+def get_point_coordinates(header, row, col, x_ref_pixel=None, y_ref_pixel=None,):
     x_inc = (header['CDELT1'] * u.degree).to(u.mas)
-    y_ref_pixel = header['CRPIX2']
     y_inc = (header['CDELT2'] * u.degree).to(u.mas)
 
-    ra = (x_ref_pixel - col)*x_inc.value
-    dec = (y_ref_pixel - row)*y_inc.value
+    if x_ref_pixel == None:
+        x_ref_pixel = header['CRPIX1']
+    if y_ref_pixel == None:
+        y_ref_pixel = header['CRPIX2']
+
+    ra = (col - x_ref_pixel)*x_inc.value
+    dec = (row - y_ref_pixel)*y_inc.value
 
     return ra, dec
