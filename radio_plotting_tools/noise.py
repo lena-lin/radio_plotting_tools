@@ -1,7 +1,11 @@
 import numpy as np
 
 
+<<<<<<< HEAD
 def noise_level(clean_map, window_width=100, n_sigma=3):
+=======
+def noise_level(clean_map, window_width=100, n_sigma=5):
+>>>>>>> master
 
     y_max = clean_map.shape[0]
     x_max = clean_map.shape[1]
