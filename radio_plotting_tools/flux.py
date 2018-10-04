@@ -1,5 +1,6 @@
 from astropy.io import fits
 import astropy.units as u
+from astropy.table import Table
 import numpy as np
 from datetime import datetime
 import pandas as pd
@@ -45,3 +46,27 @@ def get_flux_from_mod_file(f, peak_flux=False, ignore_negative_components=False)
         flux = df['Flux'].sum()
 
     return flux
+
+
+def get_flux_components_from_fits(file, abs_ra_max=5, abs_dec_max=5):
+    header = fits.open(file)[0].header
+    components = fits.open(file)[1].data
+    comp_array = Table(
+                    [components['DELTAX'], components['DELTAY'], components['FLUX']],
+                    names=['ra', 'dec', 'flux']
+                )
+
+    comp_array['ra'] = comp_array['ra'] * u.deg.to(u.mas)
+    comp_array['dec'] = comp_array['dec'] * u.deg.to(u.mas)
+
+    comp_masked = comp_array[(abs(comp_array['ra']) < abs_ra_max) & (abs(comp_array['dec']) < abs_dec_max)]
+
+    x_inc = header['CDELT1'] * u.deg.to(u.mas)
+    y_inc = header['CDELT2'] * u.deg.to(u.mas)
+    x_ref_pixel = header['CRPIX1']
+    y_ref_pixel = header['CRPIX2']
+
+    comp_masked['col'] = (comp_masked['ra'].data/x_inc + x_ref_pixel).astype(int)
+    comp_masked['row'] = (comp_masked['dec'].data/y_inc + y_ref_pixel).astype(int)
+
+    return comp_masked
