@@ -1,6 +1,7 @@
 import astropy.units as u
 import numpy as np
 from skimage.feature import peak_local_max
+from skimage.feature import blob_log
 
 
 
@@ -52,30 +53,42 @@ def get_mask_from_mas(header, ra_min, ra_max, dec_min, dec_max, x_ref_pixel=None
     return mask_row_min, mask_row_max, mask_col_min, mask_col_max
 
 
-def get_point_coordinates(header, row, col):
-    x_ref_pixel = header['CRPIX1']
+def get_point_coordinates(header, row, col, x_ref_pixel=None, y_ref_pixel=None):
+    if x_ref_pixel == None:
+        x_ref_pixel = header['CRPIX1']
+    if y_ref_pixel == None:
+        y_ref_pixel = header['CRPIX2']
+
     x_inc = (header['CDELT1'] * u.degree).to(u.mas)
-    y_ref_pixel = header['CRPIX2']
     y_inc = (header['CDELT2'] * u.degree).to(u.mas)
 
-    ra = (x_ref_pixel - col)*x_inc.value
-    dec = (y_ref_pixel - row)*y_inc.value
+    ra = (col - x_ref_pixel)*x_inc.value
+    dec = (row - y_ref_pixel)*y_inc.value
 
     return ra, dec
 
 
-def find_peaks_max_y(header, clean_map, max_y_offset, sigma=150):
-    threshold = sigma * header['NOISE']
+def find_peaks_max_y(header, clean_map, max_y_offset, sigma=150, max_sigma_=50, num_sigma_=1, threshold_=0.001):
+    #threshold = sigma * header['NOISE']
     x_ref = header['CRPIX1']
     y_ref = header['CRPIX2']
 
     x_header = x_ref
     y_header = y_ref
-    peaks = peak_local_max(clean_map, min_distance=5, threshold_abs=threshold)
+    #peaks = peak_local_max(clean_map, min_distance=1, threshold_abs=threshold)
+
+    peaks = blob_log(
+                    clean_map/abs(clean_map).max(),
+                    max_sigma=max_sigma_,
+                    num_sigma=num_sigma_,
+                    threshold=threshold_,
+                    )
+
     max_y = y_ref
     for peak in peaks:
-        if (peak[0] > max_y) and (abs(peak[0] - y_header) < max_y_offset) and (abs(peak[1] - x_header) < 10):
+        if (peak[0] > max_y) and (abs(peak[0] - y_header) < max_y_offset) and (abs(peak[1] - x_header) < 5):
             max_y = peak[0]
-            y_ref, x_ref = peak
+            y_ref = peak[0]
+            x_ref = peak[1]
 
     return x_ref, y_ref
