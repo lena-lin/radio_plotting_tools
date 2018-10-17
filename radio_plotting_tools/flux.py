@@ -48,7 +48,7 @@ def get_flux_from_mod_file(f, peak_flux=False, ignore_negative_components=False)
     return flux
 
 
-def get_flux_components_from_fits(file, abs_ra_max=5, abs_dec_max=5, x_ref_pixel=None, y_ref_pixel=None):
+def get_flux_components_from_fits(file, abs_ra_max=5, abs_dec_max=5):
     header = fits.open(file)[0].header
     components = fits.open(file)[1].data
     comp_array = Table(
@@ -63,10 +63,9 @@ def get_flux_components_from_fits(file, abs_ra_max=5, abs_dec_max=5, x_ref_pixel
 
     x_inc = header['CDELT1'] * u.deg.to(u.mas)
     y_inc = header['CDELT2'] * u.deg.to(u.mas)
-    if x_ref_pixel == None:
-        x_ref_pixel = header['CRPIX1']
-    if y_ref_pixel == None:
-        y_ref_pixel = header['CRPIX2']
+
+    x_ref_pixel = header['CRPIX1']
+    y_ref_pixel = header['CRPIX2']
 
     comp_masked['col'] = (comp_masked['ra'].data/x_inc + x_ref_pixel).astype(int)
     comp_masked['row'] = (comp_masked['dec'].data/y_inc + y_ref_pixel).astype(int)
