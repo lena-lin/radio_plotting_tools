@@ -20,3 +20,8 @@ def noise_level(clean_map, window_width=100, n_sigma=5):
     noise = n_sigma * rms
 
     return noise
+
+
+def noise_from_header(header, n_sigma=3):
+
+    return n_sigma*header['NOISE']
