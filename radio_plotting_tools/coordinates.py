@@ -50,6 +50,15 @@ def get_mask_from_mas(header, ra_min, ra_max, dec_min, dec_max, x_ref_pixel=None
     mask_col_min = int(x_ref_pixel - abs(ra_min/x_inc))
     mask_col_max = int(x_ref_pixel + abs(ra_max/x_inc))
 
+    if mask_row_min < 0:
+        mask_row_min = 0
+    if mask_row_max < 0:
+        mask_row_max = 0
+    if mask_col_min < 0:
+        mask_col_min = 0
+    if mask_col_max < 0:
+        mask_col_max = 0
+
     return mask_row_min, mask_row_max, mask_col_min, mask_col_max
 
 
@@ -68,7 +77,7 @@ def get_point_coordinates(header, row, col, x_ref_pixel=None, y_ref_pixel=None):
     return ra, dec
 
 
-def find_peaks_max_y(header, clean_map, max_y_offset, sigma=150, max_sigma_=50, num_sigma_=1, threshold_=0.001):
+def find_peaks_max_y(header, clean_map, max_y_offset, sigma=150, min_sigma=1, max_sigma=50, num_sigma=1, threshold=0.001, overlap=0.5):
     #threshold = sigma * header['NOISE']
     x_ref = header['CRPIX1']
     y_ref = header['CRPIX2']
@@ -79,9 +88,11 @@ def find_peaks_max_y(header, clean_map, max_y_offset, sigma=150, max_sigma_=50, 
 
     peaks = blob_log(
                     clean_map/abs(clean_map).max(),
-                    max_sigma=max_sigma_,
-                    num_sigma=num_sigma_,
-                    threshold=threshold_,
+                    min_sigma,
+                    max_sigma,
+                    num_sigma,
+                    threshold,
+                    overlap,
                     )
 
     max_y = y_ref
