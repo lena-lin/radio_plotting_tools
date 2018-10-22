@@ -1,17 +1,18 @@
 from skimage.feature import blob_log
 
 
-def find_blobs(clean_map, min_sigma=1, max_sigma_=50, num_sigma_=5, threshold_=0.001):
+def find_blobs(clean_map, n_blobs_max, min_sigma=1, max_sigma=20, num_sigma=10, threshold=0.001, overlap=0.7):
     blobs = blob_log(
                     clean_map/abs(clean_map).max(),
-                    max_sigma=max_sigma_,
-                    num_sigma=num_sigma_,
-                    threshold=threshold_,
+                    min_sigma,
+                    max_sigma,
+                    num_sigma,
+                    threshold,
+                    overlap
                     )
 
-    if len(blobs) <= 5:
+    if len(blobs) <= n_blobs_max:
         return blobs
 
     else:
-        print(len(blobs))
-        return find_blobs(clean_map, min_sigma=min_sigma+0.5, max_sigma_=50, num_sigma_=5, threshold_=threshold_+0.001)
+        return find_blobs(clean_map,n_blobs_max, min_sigma=min_sigma+2, max_sigma=max_sigma+10, num_sigma=5, threshold=threshold+0.001)
