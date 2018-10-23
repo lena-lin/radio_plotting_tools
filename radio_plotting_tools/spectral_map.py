@@ -4,6 +4,7 @@ from astropy.io import fits
 from astropy.convolution import Gaussian2DKernel, convolve
 from scipy import interpolate
 from .coordinates import get_pixel_coordinates
+from radio_plotting_tools.coordinates import find_peaks_max_y
 
 from radio_plotting_tools.noise import noise_level
 
