@@ -3,14 +3,14 @@ import astropy.units as u
 from astropy.io import fits
 from astropy.convolution import Gaussian2DKernel, convolve
 from scipy import interpolate
-from .coordinates import get_pixel_coordinates
+from .coordinates import get_pixel_grid_coordinates
 from radio_plotting_tools.coordinates import find_peaks_max_y
 
 from radio_plotting_tools.noise import noise_level
 
 
-def interpolated_map(header, clean_map, offset, ra=[5, -5], dec=[-5, 5], convolution_beam_header=None):
-    x_ref, y_ref = find_peaks_max_y(header, clean_map, max_y_offset=offset)
+def interpolated_map(header, clean_map, ra=[5, -5], dec=[-5, 5], convolution_beam_header=None):
+    x_ref, y_ref = find_peaks_max_y(header, clean_map, max_x_offset=None, max_y_offset=None)
 
     noise = noise_level(clean_map)
     clean_map = (clean_map > noise).astype(int) * clean_map
@@ -21,7 +21,7 @@ def interpolated_map(header, clean_map, offset, ra=[5, -5], dec=[-5, 5], convolu
         bpa = convolution_beam_header['BPA']
         clean_map = convolve_cleanmap(clean_map, bmin, bmaj, bpa)
 
-    x, y = get_pixel_coordinates(header, x_ref_pixel=x_ref, y_ref_pixel=y_ref)
+    x, y = get_pixel_grid_coordinates(header, x_ref_pixel=x_ref, y_ref_pixel=y_ref)
     func_interpol_cm = interpolate.interp2d(x, y, clean_map, kind='cubic')
 
     ra_linspace = np.linspace(ra[0], ra[1], 501)
@@ -40,9 +40,9 @@ def beamsize(header):
     return major * minor * np.pi
 
 
-def spectral_indices(header1, data1, header2, data2, offset1, offset2, epsilon=1e-3):
-    _, _, interp_map_1 = interpolated_map(header1, data1, offset=offset1)
-    _, _, interp_map_2 = interpolated_map(header2, data2, offset=offset2, convolution_beam_header=header1)
+def spectral_indices(header1, data1, header2, data2, epsilon=1e-3):
+    _, _, interp_map_1 = interpolated_map(header1, data1)
+    _, _, interp_map_2 = interpolated_map(header2, data2, convolution_beam_header=header1)
 
     interp_map_1[interp_map_1 < epsilon] = np.nan
     interp_map_2[interp_map_2 < epsilon] = np.nan
@@ -53,7 +53,7 @@ def spectral_indices(header1, data1, header2, data2, offset1, offset2, epsilon=1
     freq1 = header1['CRVAL3']
     freq2 = header2['CRVAL3']
 
-    spectral_indices = np.log((interp_map_1 / interp_map_2) * (beam2 / beam1)) / np.log(freq2/freq1)
+    spectral_indices = np.log((interp_map_2 / interp_map_1) * (beam1 / beam2)) / np.log(freq2/freq1)
 
     return spectral_indices
 
