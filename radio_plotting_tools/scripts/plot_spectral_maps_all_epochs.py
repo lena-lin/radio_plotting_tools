@@ -8,8 +8,8 @@ from tqdm import tqdm
 import numpy as np
 
 
-files_15 = sorted(glob('/home/lena/Dokumente/Radio/NGC1275/VLBA_15GHz/Data/FITS/201*/*.fits'))
-files_43 = sorted(glob('/home/lena/Dokumente/Radio/NGC1275/VLBA-BU/Data_Web/FITS/20*-*/0316*.IMAP'))
+files_15 = sorted(glob('/home/lena/Documents/Radio/NGC1275/VLBA_15GHz/Data/FITS/201*/*.fits'))
+files_43 = sorted(glob('/home/lena/Documents/Radio/NGC1275/VLBA-BU/Data_Web/FITS/20*-*/0316*.IMAP'))
 
 
 epoch_partners = []
@@ -66,7 +66,7 @@ for f15, f43, td in tqdm(epoch_partners):
     ax2.set_title('Clean Map {: .2f} GHz'.format((freq2 * u.Hz).to(u.GHz)))
 
     ax3 = plt.subplot(133)
-    cax = ax3.pcolorfast(-x2, y2, spec_ind, cmap='Spectral', vmin=-3, vmax=3)
+    cax = ax3.pcolorfast(-x2, y2, spec_ind, cmap='Spectral')
     ax3.invert_xaxis()
     ax3.set_aspect(1)
     ax3.set_xlim(5, -3.8)
@@ -78,5 +78,5 @@ for f15, f43, td in tqdm(epoch_partners):
     ax3.set_title('Spectral Map')
 
     plt.colorbar(cax, fraction=0.052, pad=0.05)
-    plt.savefig('/home/lena/Dokumente/Radio/NGC1275/VLBA-BU/Plots/Spectral_maps/{}_spectral_map_15_43_conv.png'.format(header1['DATE-OBS']))
+    plt.savefig('/home/lena/Documents/Radio/NGC1275/VLBA-BU/Plots/Spectral_maps/{}_spectral_map_15_43_conv.png'.format(header1['DATE-OBS']))
     plt.close()
