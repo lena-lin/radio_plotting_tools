@@ -93,26 +93,12 @@ def get_point_coordinates(header, row, col, x_ref_pixel=None, y_ref_pixel=None):
 
 
 def find_peaks_max_y(header, clean_map, max_x_offset, max_y_offset, sigma=150, min_sigma=1, max_sigma=50, num_sigma=1, threshold=0.01, overlap=0.5):
-    #threshold = sigma * header['NOISE']
+
     x_ref = header['CRPIX1']
     y_ref = header['CRPIX2']
 
     x_header = x_ref
     y_header = y_ref
-    #peaks = peak_local_max(clean_map, min_distance=1, threshold_abs=threshold)
-
-    if max_x_offset == None:
-        if int(header['CRVAL3']/1e9) == 43:
-            max_x_offset=45
-        elif int(header['CRVAL3']/1e9) == 15:
-            max_x_offset=5
-
-    if max_y_offset == None:
-        if int(header['CRVAL3']/1e9) == 43:
-            max_y_offset=200
-        elif int(header['CRVAL3']/1e9) == 15:
-            max_y_offset=50
-
 
     peaks = blob_log(
                     clean_map/abs(clean_map).max(),
