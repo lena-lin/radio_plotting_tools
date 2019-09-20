@@ -26,24 +26,27 @@ def plot_clean_map(input_file, output_path, ra_min, ra_max, dec_min, dec_max):
     x_grid, y_grid = get_pixel_grid_coordinates(header, x_ref_pixel=x_ref, y_ref_pixel=y_ref)
     noise = noise_from_header(header, n_sigma=5)
 
+    cmap = mpl.cm.afmhot
+    cmap.set_bad('black',1.)
+
     fig, ax1 = plt.subplots(1, 1, figsize=(10, 10))
 
-    cax = ax1.pcolorfast(x_grid, y_grid, masked_clean_map, cmap='afmhot')
+    cax = ax1.pcolorfast(x_grid, y_grid, np.log(masked_clean_map), cmap=cmap, vmax=np.log(3.5))
     ax1.set_aspect(1)
     ax1.set_xlim(ra_min, ra_max)
     ax1.set_ylim(dec_min, dec_max)
-    ax1.contour(
-                x_grid,
-                y_grid,
-                masked_clean_map,
-                levels=np.logspace(
-                    np.log10(noise),
-                    np.log10(masked_clean_map.max()),
-                    5
-                ),
-                cmap='YlOrBr',
-                linewidths=1,
-                )
+    # ax1.contour(
+    #             x_grid,
+    #             y_grid,
+    #             masked_clean_map,
+    #             levels=np.logspace(
+    #                 np.log10(noise),
+    #                 np.log10(masked_clean_map.max()),
+    #                 5
+    #             ),
+    #             cmap='YlOrBr',
+    #             linewidths=1,
+    #             )
 
 
     ax1.set_xlabel('Relative Right Ascension in mas')
@@ -62,15 +65,15 @@ def plot_clean_map(input_file, output_path, ra_min, ra_max, dec_min, dec_max):
     #     fontsize=16)
 
 
-    cbar = fig.colorbar(cax, fraction=0.046, pad=0.04)
-    cbar.ax.set_ylabel('Flux in Jy/beam', fontsize=16)
+    # cbar = fig.colorbar(cax, fraction=0.046, pad=0.04)
+    # cbar.ax.set_ylabel('Flux in Jy/beam', fontsize=16)
     ax1.set_xlabel('Relative Right Ascension in mas', fontsize=16)
     ax1.set_ylabel('Relative Declination in mas', fontsize=16)
-    ax1.set_aspect(1)
-    plt.tight_layout()
+    # ax1.set_aspect(1)
+    # plt.tight_layout()
     # plt.show()
     # plt.savefig('{}/{}_{}_cleanmap.pdf'.format(output_path, date, source))
-    plt.savefig('{}/{}_{}_cleanmap.png'.format(output_path, date, source), dpi=150)
+    plt.savefig('{}/{}_{}_cleanmap_log.png'.format(output_path, date, source), dpi=150)
     plt.close()
 
 
@@ -79,27 +82,27 @@ def plot_clean_map(input_file, output_path, ra_min, ra_max, dec_min, dec_max):
 @click.argument('output_path', type=click.Path(file_okay=False, dir_okay=True))
 @click.option(
     '--ra_min',
-    type=click.INT,
+    type=click.FLOAT,
     help='relative RA min for plotting',
-    default='5'
+    default='2.5'
 )
 @click.option(
     '--ra_max',
-    type=click.INT,
+    type=click.FLOAT,
     help='relative RA max for plotting',
-    default='-5'
+    default='-2.5'
 )
 @click.option(
     '--dec_min',
     type=click.INT,
     help='relative DEC min for plotting',
-    default='-5'
+    default='-6'
 )
 @click.option(
     '--dec_max',
     type=click.INT,
     help='relative DEC max for plotting',
-    default='5'
+    default='2'
 )
 def main(
     input_wildcard,

@@ -1,6 +1,5 @@
 import astropy.units as u
 import numpy as np
-from skimage.feature import peak_local_max
 from skimage.feature import blob_log
 
 
